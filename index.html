@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Pro</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 420px;
+        }
+        h2 { color: #1c1e21; margin-top: 0; text-align: center; font-size: 1.5rem; }
+        
+        .input-group { margin-bottom: 1rem; position: relative; }
+        label { display: block; margin-bottom: 0.5rem; color: #606770; font-weight: 600; font-size: 0.85rem; }
+        
+        /* Contenedor del input con la X */
+        .input-wrapper { position: relative; display: flex; align-items: center; }
+        input {
+            width: 100%;
+            padding: 12px 40px 12px 12px;
+            border: 2px solid #e4e6eb;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+        }
+        input:focus { border-color: #007bff; outline: none; background-color: #f8fbff; }
+
+        .btn-clear {
+            position: absolute;
+            right: 10px;
+            background: #e4e6eb;
+            color: #606770;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .btn-clear:hover { background: #d8dadf; }
+
+        /* Botones de suma rápida */
+        .quick-add-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 1.5rem;
+        }
+        .btn-add {
+            background: #f0f2f5;
+            border: 1px solid #dddfe2;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #4b4f56;
+            transition: all 0.2s;
+        }
+        .btn-add:hover { background: #e4e6eb; border-color: #ccd0d5; }
+
+        .config-row { display: flex; gap: 10px; margin-bottom: 1rem; }
+
+        .result-box {
+            background-color: #f0f7ff;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #d0e4f7;
+        }
+        .result-label { color: #0056b3; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .result-value { color: #007bff; font-size: 2rem; font-weight: 800; margin-bottom: 12px; }
+        
+        .btn-copy {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            width: 100%;
+            transition: 0.2s;
+        }
+        .btn-copy:hover { background-color: #0062cc; box-shadow: 0 4px 12px rgba(0,123,255,0.3); }
+        .btn-copy.success { background-color: #28a745; }
+
+        .details { font-size: 0.75rem; color: #8d949e; margin-top: 12px; line-height: 1.4; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Calculadora de Precios</h2>
+    
+    <div class="input-group">
+        <label>Precio Base ($)</label>
+        <div class="input-wrapper">
+            <input type="text" id="precioBase" placeholder="0" oninput="formatearYCalcular(this)">
+            <button class="btn-clear" onclick="limpiarPrecio()">✕</button>
+        </div>
+    </div>
+
+    <div class="quick-add-container">
+        <button class="btn-add" onclick="sumarValor(500)">+500</button>
+        <button class="btn-add" onclick="sumarValor(1000)">+1.000</button>
+        <button class="btn-add" onclick="sumarValor(2000)">+2.000</button>
+        <button class="btn-add" onclick="sumarValor(5000)">+5.000</button>
+        <button class="btn-add" onclick="sumarValor(10000)">+10.000</button>
+    </div>
+
+    <div class="config-row">
+        <div class="input-group" style="flex: 1;">
+            <label>Suba (%)</label>
+            <input type="text" id="porcentaje" value="30" oninput="formatearYCalcular(this)">
+        </div>
+        <div class="input-group" style="flex: 1;">
+            <label>Hasta ($)</label>
+            <input type="text" id="limite" value="10,000" oninput="formatearYCalcular(this)">
+        </div>
+    </div>
+
+    <div class="result-box">
+        <div class="result-label">PRECIO FINAL</div>
+        <div class="result-value" id="precioFinal">$0</div>
+        
+        <button class="btn-copy" id="btnCopiar" onclick="copiarAlPortapapeles()">
+            Copiar número limpio
+        </button>
+
+        <div class="details" id="detalle">Cálculo basado en el límite.</div>
+    </div>
+</div>
+
+<script>
+    // Función para limpiar el input
+    function limpiarPrecio() {
+        const input = document.getElementById('precioBase');
+        input.value = '';
+        input.focus();
+        calcular();
+    }
+
+    // Función para sumar valores rápidos
+    function sumarValor(cantidad) {
+        const input = document.getElementById('precioBase');
+        let actual = obtenerNumero('precioBase');
+        let nuevoValor = actual + cantidad;
+        
+        // Aplicamos el formato al input después de sumar
+        input.value = nuevoValor.toLocaleString('en-US');
+        calcular();
+    }
+
+    function formatearYCalcular(input) {
+        let valorLimpio = input.value.replace(/[^0-9.]/g, '');
+        if (valorLimpio !== "") {
+            let partes = valorLimpio.split('.');
+            partes[0] = parseInt(partes[0]).toLocaleString('en-US');
+            input.value = partes.join('.');
+        }
+        calcular();
+    }
+
+    function obtenerNumero(id) {
+        let val = document.getElementById(id).value.replace(/,/g, '');
+        return parseFloat(val) || 0;
+    }
+
+    function calcular() {
+        const precio = obtenerNumero('precioBase');
+        const porcentaje = obtenerNumero('porcentaje');
+        const limite = obtenerNumero('limite');
+
+        const baseCalculo = Math.min(precio, limite);
+        const incremento = baseCalculo * (porcentaje / 100);
+        const total = precio + incremento;
+
+        // Visualizamos con decimales solo si no es un número redondo
+        const tieneDecimales = total % 1 !== 0;
+        const opciones = tieneDecimales 
+            ? { minimumFractionDigits: 2, maximumFractionDigits: 2 } 
+            : { maximumFractionDigits: 0 };
+        
+        document.getElementById('precioFinal').innerText = '$' + total.toLocaleString('en-US', opciones);
+        
+        document.getElementById('detalle').innerHTML = 
+            `Extra: $${incremento.toLocaleString('en-US')} <br> (Aplicado sobre $${baseCalculo.toLocaleString('en-US')})`;
+    }
+
+    async function copiarAlPortapapeles() {
+        const precioFinalText = document.getElementById('precioFinal').innerText;
+        const boton = document.getElementById('btnCopiar');
+        
+        // Limpiamos absolutamente todo para el portapapeles
+        const numeroLimpio = precioFinalText.replace('$', '').replace(/,/g, '').split('.')[0];
+        
+        if(numeroLimpio === "0") return;
+
+        try {
+            await navigator.clipboard.writeText(numeroLimpio);
+            const textoOriginal = boton.innerText;
+            boton.innerText = '¡Copiado: ' + numeroLimpio + '!';
+            boton.classList.add('success');
+            
+            setTimeout(() => {
+                boton.innerText = textoOriginal;
+                boton.classList.remove('success');
+            }, 1500);
+        } catch (err) {
+            alert('Error al copiar');
+        }
+    }
+
+    window.onload = calcular;
+</script>
+
+</body>
+</html>
