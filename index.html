@@ -11,23 +11,28 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            /* CAMBIO: min-height permite que el contenido crezca si es necesario */
+            min-height: 100vh; 
             margin: 0;
+            /* CAMBIO: Padding para que no toque los bordes en pantallas mini */
+            padding: 15px;
+            box-sizing: border-box;
         }
         .card {
             background: white;
-            padding: 2rem;
+            padding: 1.5rem; /* Reducido un poco para ganar espacio */
             border-radius: 16px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.08);
             width: 100%;
             max-width: 420px;
+            /* CAMBIO: Asegura que la tarjeta nunca supere el ancho de la pantalla */
+            box-sizing: border-box;
         }
-        h2 { color: #1c1e21; margin-top: 0; text-align: center; font-size: 1.5rem; }
+        h2 { color: #1c1e21; margin-top: 0; text-align: center; font-size: 1.4rem; }
         
         .input-group { margin-bottom: 1rem; position: relative; }
         label { display: block; margin-bottom: 0.5rem; color: #606770; font-weight: 600; font-size: 0.85rem; }
         
-        /* Contenedor del input con la X */
         .input-wrapper { position: relative; display: flex; align-items: center; }
         input {
             width: 100%;
@@ -56,14 +61,13 @@
             font-size: 12px;
             font-weight: bold;
         }
-        .btn-clear:hover { background: #d8dadf; }
 
-        /* Botones de suma rápida */
         .quick-add-container {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
             margin-bottom: 1.5rem;
+            justify-content: center;
         }
         .btn-add {
             background: #f0f2f5;
@@ -71,24 +75,40 @@
             padding: 6px 12px;
             border-radius: 20px;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 600;
             color: #4b4f56;
             transition: all 0.2s;
         }
-        .btn-add:hover { background: #e4e6eb; border-color: #ccd0d5; }
+        .btn-add:hover { background: #e4e6eb; }
 
-        .config-row { display: flex; gap: 10px; margin-bottom: 1rem; }
+        /* CAMBIO: Para que los inputs se apilen en pantallas muy angostas */
+        .config-row { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 1rem; 
+            flex-wrap: wrap; 
+        }
+        .config-row .input-group {
+            flex: 1;
+            min-width: 140px; /* Evita que se aplasten demasiado */
+        }
 
         .result-box {
             background-color: #f0f7ff;
-            padding: 1.5rem;
+            padding: 1.2rem;
             border-radius: 12px;
             text-align: center;
             border: 1px solid #d0e4f7;
         }
         .result-label { color: #0056b3; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; }
-        .result-value { color: #007bff; font-size: 2rem; font-weight: 800; margin-bottom: 12px; }
+        .result-value { 
+            color: #007bff; 
+            font-size: 1.8rem; 
+            font-weight: 800; 
+            margin-bottom: 12px; 
+            word-break: break-all; /* Por si el número es gigante */
+        }
         
         .btn-copy {
             background-color: #007bff;
@@ -102,7 +122,7 @@
             width: 100%;
             transition: 0.2s;
         }
-        .btn-copy:hover { background-color: #0062cc; box-shadow: 0 4px 12px rgba(0,123,255,0.3); }
+        .btn-copy:hover { background-color: #0062cc; }
         .btn-copy.success { background-color: #28a745; }
 
         .details { font-size: 0.75rem; color: #8d949e; margin-top: 12px; line-height: 1.4; }
@@ -123,18 +143,18 @@
 
     <div class="quick-add-container">
         <button class="btn-add" onclick="sumarValor(500)">+500</button>
-        <button class="btn-add" onclick="sumarValor(1000)">+1.000</button>
-        <button class="btn-add" onclick="sumarValor(2000)">+2.000</button>
-        <button class="btn-add" onclick="sumarValor(5000)">+5.000</button>
-        <button class="btn-add" onclick="sumarValor(10000)">+10.000</button>
+        <button class="btn-add" onclick="sumarValor(1000)">+1k</button>
+        <button class="btn-add" onclick="sumarValor(2000)">+2k</button>
+        <button class="btn-add" onclick="sumarValor(5000)">+5k</button>
+        <button class="btn-add" onclick="sumarValor(10000)">+10k</button>
     </div>
 
     <div class="config-row">
-        <div class="input-group" style="flex: 1;">
+        <div class="input-group">
             <label>Suba (%)</label>
             <input type="text" id="porcentaje" value="30" oninput="formatearYCalcular(this)">
         </div>
-        <div class="input-group" style="flex: 1;">
+        <div class="input-group">
             <label>Hasta ($)</label>
             <input type="text" id="limite" value="10,000" oninput="formatearYCalcular(this)">
         </div>
@@ -153,7 +173,6 @@
 </div>
 
 <script>
-    // Función para limpiar el input
     function limpiarPrecio() {
         const input = document.getElementById('precioBase');
         input.value = '';
@@ -161,13 +180,10 @@
         calcular();
     }
 
-    // Función para sumar valores rápidos
     function sumarValor(cantidad) {
         const input = document.getElementById('precioBase');
         let actual = obtenerNumero('precioBase');
         let nuevoValor = actual + cantidad;
-        
-        // Aplicamos el formato al input después de sumar
         input.value = nuevoValor.toLocaleString('en-US');
         calcular();
     }
@@ -196,7 +212,6 @@
         const incremento = baseCalculo * (porcentaje / 100);
         const total = precio + incremento;
 
-        // Visualizamos con decimales solo si no es un número redondo
         const tieneDecimales = total % 1 !== 0;
         const opciones = tieneDecimales 
             ? { minimumFractionDigits: 2, maximumFractionDigits: 2 } 
@@ -205,14 +220,12 @@
         document.getElementById('precioFinal').innerText = '$' + total.toLocaleString('en-US', opciones);
         
         document.getElementById('detalle').innerHTML = 
-            `Extra: $${incremento.toLocaleString('en-US')} <br> (Aplicado sobre $${baseCalculo.toLocaleString('en-US')})`;
+            `Extra: $${incremento.toLocaleString('en-US')} <br> (Sobre $${baseCalculo.toLocaleString('en-US')})`;
     }
 
     async function copiarAlPortapapeles() {
         const precioFinalText = document.getElementById('precioFinal').innerText;
         const boton = document.getElementById('btnCopiar');
-        
-        // Limpiamos absolutamente todo para el portapapeles
         const numeroLimpio = precioFinalText.replace('$', '').replace(/,/g, '').split('.')[0];
         
         if(numeroLimpio === "0") return;
